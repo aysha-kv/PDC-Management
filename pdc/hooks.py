@@ -213,3 +213,37 @@ app_license = "MIT"
 # auth_hooks = [
 # 	"pdc.auth.validate"
 # ]
+
+
+doctype_js = {
+    "Payment Entry":"public/js/payment_entry.js",
+    }
+
+
+fixtures = [
+    {
+        "doctype": "Custom Field", 
+        "filters": [
+            [
+                "name",
+                "in",
+                [
+                    "Accounts Settings-custom_pdc_settings",
+                    "Accounts Settings-custom_pdc_payable_account",
+                    "Accounts Settings-custom_pdc_receivable_account",
+                    "Payment Entry-custom_is_pdc",
+                    "Payment Entry-custom_pdc_details",
+                    "Payment Entry-custom_cheque_number",
+                    "Payment Entry-custom_bank_name",
+                    "Payment Entry-custom_cheque_date",
+                    "Payment Entry-custom_pdc_col",
+                    "Payment Entry-custom_pdc_status",
+                    "Payment Entry-custom_clearance_bank_account",
+                    "Payment Entry-custom_clearance_date",
+                    "Accounts Settings-custom_pdc_clearence_account"
+                ]
+            ]                         
+        ]
+    },
+    
+]
