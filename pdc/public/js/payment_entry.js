@@ -1,87 +1,4 @@
 
-
-// frappe.ui.form.on('Payment Entry', {
-// 	refresh(frm) {
-// 		if (
-// 			frm.doc.docstatus === 1 &&
-// 			frm.doc.custom_is_pdc &&
-// 			frm.doc.custom_pdc_status === "Pending"
-// 		) {
-// 			frm.add_custom_button(__('Clear PDC'), () => {
-
-// 				// Fetch default clearance account from Accounts Settings
-// 				frappe.db.get_single_value(
-// 					"Accounts Settings",
-// 					"custom_pdc_clearence_account"
-// 				).then((default_clearance_account) => {
-
-// 					frappe.prompt(
-// 						[
-// 							{
-// 								fieldname: "clearance_date",
-// 								fieldtype: "Date",
-// 								label: __("Clearance Date"),
-// 								reqd: 1,
-// 								default: frappe.datetime.get_today()
-// 							},
-// 							{
-// 								fieldname: "clearance_bank_account",
-// 								fieldtype: "Link",
-// 								label: __("Clearance Bank Account"),
-// 								options: "Account",
-// 								reqd: 1,
-// 								default: default_clearance_account || undefined,
-// 								get_query: () => {
-// 									return {
-// 										filters: {
-// 											company: frm.doc.company,
-// 											account_type: ["in", ["Bank", "Cash"]],
-// 											disabled: 0
-// 										}
-// 									};
-// 								}
-// 							}
-// 						],
-// 						(values) => {
-
-// 							// Validate clearance date
-// 							if (
-// 								frm.doc.custom_cheque_date &&
-// 								frappe.datetime.str_to_obj(values.clearance_date) <
-// 								frappe.datetime.str_to_obj(frm.doc.custom_cheque_date)
-// 							) {
-// 								frappe.msgprint({
-// 									title: __("Invalid Clearance Date"),
-// 									message: __("Clearance Date cannot be before Cheque Date"),
-// 									indicator: "red"
-// 								});
-// 								return;
-// 							}
-
-// 							frappe.call({
-// 								method: "pdc.pdc.custom_script.payment_entry.clear_pdc",
-// 								args: {
-// 									payment_entry: frm.doc.name,
-// 									clearance_date: values.clearance_date,
-// 									clearance_bank_account: values.clearance_bank_account
-// 								},
-// 								callback: function (r) {
-// 									if (!r.exc) {
-// 										frappe.msgprint(__("PDC Cleared Successfully"));
-// 										frm.reload_doc();
-// 									}
-// 								}
-// 							});
-// 						},
-// 						__("Clear PDC"),
-// 						__("Clear")
-// 					);
-// 				});
-// 			});
-// 		}
-// 	}
-// });
-
 frappe.ui.form.on('Payment Entry', {
 	refresh(frm) {
 		if (
@@ -91,7 +8,6 @@ frappe.ui.form.on('Payment Entry', {
 		) {
 			frm.add_custom_button(__('Clear PDC'), () => {
 
-				// Fetch default clearance bank account from Accounts Settings
 				frappe.db.get_single_value(
 					"Accounts Settings",
 					"custom_pdc_clearence_account"
@@ -124,7 +40,6 @@ frappe.ui.form.on('Payment Entry', {
 						],
 						(values) => {
 
-							// Client-side validation
 							if (
 								frm.doc.custom_cheque_date &&
 								frappe.datetime.str_to_obj(values.clearance_date) <
@@ -309,16 +224,3 @@ frappe.ui.form.on("Payment Entry", {
 		});
 	}
 });
-
-// frappe.ui.form.on("Payment Entry", {
-//     setup(frm) {
-//         frm.set_query("custom_clearence_account", function () {
-//             return {
-//                 filters: {
-//                     account_type: "Bank",
-//                     is_group: 0
-//                 }
-//             };
-//         });
-//     }
-// });

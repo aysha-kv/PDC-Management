@@ -97,63 +97,6 @@ def fetch_pending_pdcs(docname):
     }
 
 
-# @frappe.whitelist()
-# def bulk_clear_pdcs(docname):
-#     """
-#     STEP 5:
-#     Perform actual bulk PDC clearance
-#     Reuses existing single-PDC clear logic
-#     """
-
-#     doc = frappe.get_doc("Bulk PDC Clearance", docname)
-
-#     if doc.status != "Draft":
-#         frappe.throw("Only Draft documents can be cleared")
-
-#     if not doc.pdc_entries:
-#         frappe.throw("No PDC entries to clear")
-
-#     cleared_count = 0
-#     failed_count = 0
-
-#     for row in doc.pdc_entries:
-
-#         if row.status != "Pending":
-#             continue
-
-#         try:
-#             frappe.call(
-#                 "pdc.pdc.custom_script.payment_entry.clear_pdc",
-#                 payment_entry=row.payment_entry
-#             )
-
-#             row.status = "Cleared"
-#             row.remarks = "Cleared successfully"
-
-#             cleared_count += 1
-
-#         except Exception as e:
-#             row.status = "Failed"
-#             row.remarks = str(e)
-#             failed_count += 1
-
-#     if cleared_count and not failed_count:
-#         doc.status = "Completed"
-#     elif cleared_count and failed_count:
-#         doc.status = "Failed"
-#     else:
-#         doc.status = "Draft"
-
-#     doc.cleared_on = frappe.utils.now()
-#     doc.save(ignore_permissions=True)
-
-#     return {
-#         "cleared": cleared_count,
-#         "failed": failed_count
-#     }
-
-
-import frappe
 
 @frappe.whitelist()
 def bulk_clear_pdcs(docname, clearance_date=None, clearance_bank_account=None):
@@ -186,7 +129,6 @@ def bulk_clear_pdcs(docname, clearance_date=None, clearance_bank_account=None):
 			continue
 
 		try:
-			# Reuse single PDC clearance logic
 			frappe.call(
 				"pdc.pdc.custom_script.payment_entry.clear_pdc",
 				payment_entry=row.payment_entry,
@@ -203,7 +145,6 @@ def bulk_clear_pdcs(docname, clearance_date=None, clearance_bank_account=None):
 			row.remarks = str(e)
 			failed_count += 1
 
-	# Final document status
 	if cleared_count and not failed_count:
 		doc.status = "Completed"
 	elif cleared_count and failed_count:
