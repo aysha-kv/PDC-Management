@@ -115,3 +115,90 @@ def get_pdc_accounts():
         "pdc_receivable": settings.custom_pdc_receivable_account,
         "pdc_payable": settings.custom_pdc_payable_account
     }
+
+@frappe.whitelist()
+def mark_pdc_as_bounced(payment_entry):
+
+    pe = frappe.get_doc("Payment Entry", payment_entry)
+
+    if not pe.custom_is_pdc:
+        frappe.throw("This Payment Entry is not marked as PDC")
+
+    if pe.docstatus != 1:
+        frappe.throw("Payment Entry must be submitted")
+
+    if pe.custom_pdc_status in ("Cleared", "Bounced"):
+        frappe.throw(f"Cheque already {pe.custom_pdc_status}")
+
+    settings = frappe.get_single("Accounts Settings")
+    pdc_receivable = settings.custom_pdc_receivable_account
+    pdc_payable = settings.custom_pdc_payable_account
+
+    if not pdc_receivable or not pdc_payable:
+        frappe.throw("Configure PDC accounts in Accounts Settings")
+
+    if not pe.references:
+        frappe.throw("No invoice references found in Payment Entry")
+
+    je = frappe.new_doc("Journal Entry")
+    je.voucher_type = "Journal Entry"
+    je.company = pe.company
+    je.posting_date = nowdate()
+    je.remark = f"PDC Cheque bounced for Payment Entry {pe.name}"
+
+    for ref in pe.references:
+
+        amount = ref.allocated_amount
+        if amount <= 0:
+            continue
+
+        if pe.payment_type == "Receive":
+
+            je.append("accounts", {
+                "account": pe.party_account,
+                "party_type": pe.party_type,
+                "party": pe.party,
+                "against_voucher_type": ref.reference_doctype,
+                "against_voucher": ref.reference_name,
+                "debit_in_account_currency": amount,
+            })
+
+            je.append("accounts", {
+                "account": pdc_receivable,
+                "credit_in_account_currency": amount,
+            })
+
+        else:
+
+            je.append("accounts", {
+                "account": pdc_payable,
+                "debit_in_account_currency": amount,
+            })
+
+            je.append("accounts", {
+                "account": pe.party_account,
+                "party_type": pe.party_type,
+                "party": pe.party,
+                "against_voucher_type": ref.reference_doctype,
+                "against_voucher": ref.reference_name,
+                "credit_in_account_currency": amount,
+            })
+
+    je.insert()
+    je.submit()
+
+    pe.custom_pdc_status = "Bounced"
+    pe.custom_clearance_date = None
+    pe.custom_clearance_bank_account = None
+
+    pe.add_comment(
+        "Info",
+        f"PDC bounced. Reversal Journal Entry {je.name} created and invoices reopened."
+    )
+
+    pe.save(ignore_permissions=True)
+
+    return {
+        "journal_entry": je.name,
+        "status": "Bounced"
+    }
